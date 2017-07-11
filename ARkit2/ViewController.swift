@@ -30,7 +30,7 @@ class ViewController: UIViewController {
     let addCubeButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .yellow
-        button.setTitle("Add Cup", for: .normal)
+        button.setTitle("Add Cube", for: .normal)
         button.setTitleColor(.blue, for: .normal)
         button.addTarget(self, action: #selector(handleAddCube), for: .touchUpInside)
         return button
@@ -40,22 +40,36 @@ class ViewController: UIViewController {
         return (Float(arc4random()) / 0xFFFFFFFF) * (max - min) + min // 0xFFFFFFFF same as UInt32.max
     }
     
-    
-    @objc func handleAddCup() {
-        let zCoords = randomFloat(min: -2, max: -0.2)
-        
-        let cubeNode = SCNNode(geometry: SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0))
-        cubeNode.position = SCNVector3(0,0,zCoords) // This is in metres
-        sceneView.scene.rootNode.addChildNode(cubeNode)
-        
-        
-        
-        print("Added cup")
-        
+    func getCameraCoordinates(sceneView: ARSCNView) -> MyCameraCoordinates {
+        if let cameraTransform = sceneView.session.currentFrame?.camera.transform {
+            let cameraCoordinates = MDLTransform(matrix: cameraTransform)
+            
+            var cc = MyCameraCoordinates(x: 0, y: 0, z: 0)
+            cc.x = cameraCoordinates.translation.x
+            cc.y = cameraCoordinates.translation.y
+            cc.z = cameraCoordinates.translation.z
+            return cc
+        }
+        return MyCameraCoordinates()
     }
     
     @objc func handleAddCube() {
+        let cubeNode = SCNNode(geometry: SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0))
+        let cc = getCameraCoordinates(sceneView: sceneView)
+        guard let xPos = cc.x else { return }
+        guard let yPos = cc.y else { return }
+        guard let zPos = cc.z else { return }
+        
+        cubeNode.position = SCNVector3(xPos, yPos, zPos)
+        
+        sceneView.scene.rootNode.addChildNode(cubeNode)
+
         print("Added cube")
+        
+    }
+    
+    @objc func handleAddCup() {
+        print("Added cup")
     }
     
     override func viewDidLoad() {

@@ -10,7 +10,7 @@ import UIKit
 import SceneKit
 import ARKit
 
-class ViewController: UIViewController, ARSCNViewDelegate {
+class ViewController: UIViewController {
 
     let sceneView: ARSCNView = {
         let sv = ARSCNView()
@@ -37,7 +37,15 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     }()
     
     
+    
+    
     @objc func handleAddCup() {
+        let cubeNode = SCNNode(geometry: SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0))
+        cubeNode.position = SCNVector3(0,0,-0.2) // This is in metres
+        sceneView.scene.rootNode.addChildNode(cubeNode)
+        
+        
+        
         print("Added cup")
         
     }
@@ -51,17 +59,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         setupViews()
         
-        // Set the view's delegate
-        sceneView.delegate = self
-        
-        // Show statistics such as fps and timing information
-        sceneView.showsStatistics = true
-        
-        // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
-        
-        // Set the scene to the view
-        sceneView.scene = scene
     }
     
     func setupViews() {

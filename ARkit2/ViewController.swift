@@ -18,12 +18,12 @@ class ViewController: UIViewController {
         return sv
     }()
     
-    let addCupButton: UIButton = {
+    let addSunglassButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .yellow
-        button.setTitle("Add Cup", for: .normal)
+        button.setTitle("Add sunglass", for: .normal)
         button.setTitleColor(.blue, for: .normal)
-        button.addTarget(self, action: #selector(handleAddCup), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleAddSunglass), for: .touchUpInside)
         return button
     }()
     
@@ -68,8 +68,27 @@ class ViewController: UIViewController {
         
     }
     
-    @objc func handleAddCup() {
-        print("Added cup")
+    @objc func handleAddSunglass() {
+        let sunglassNode = SCNNode()
+        
+        let cc = getCameraCoordinates(sceneView: sceneView)
+        guard let xPos = cc.x else { return }
+        guard let yPos = cc.y else { return }
+        guard let zPos = cc.z else { return }
+        sunglassNode.position = SCNVector3(xPos, yPos, zPos)
+        
+        guard let virtualObjectScene = SCNScene(named: "sunglass.dae", inDirectory: "ar.scnassets/sunglass", options: nil) else { return }
+        
+        let wrapperNode = SCNNode()
+        for child in virtualObjectScene.rootNode.childNodes {
+            child.geometry?.firstMaterial?.lightingModel = .physicallyBased
+            wrapperNode.addChildNode(child)
+        }
+        sunglassNode.addChildNode(wrapperNode)
+        
+        sceneView.scene.rootNode.addChildNode(sunglassNode)
+        
+        print("Added sunglass")
     }
     
     override func viewDidLoad() {
@@ -81,10 +100,10 @@ class ViewController: UIViewController {
     
     func setupViews() {
         view.addSubview(sceneView)
-        view.addSubview(addCupButton)
+        view.addSubview(addSunglassButton)
         view.addSubview(addCubeButton)
         sceneView.translatesAutoresizingMaskIntoConstraints = false
-        addCupButton.translatesAutoresizingMaskIntoConstraints = false
+        addSunglassButton.translatesAutoresizingMaskIntoConstraints = false
         addCubeButton.translatesAutoresizingMaskIntoConstraints = false
         
         sceneView.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
@@ -92,10 +111,10 @@ class ViewController: UIViewController {
         sceneView.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
         sceneView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100).isActive = true
         
-        addCupButton.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
-        addCupButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100).isActive = true
-        addCupButton.widthAnchor.constraint(equalToConstant: 100).isActive = true
-        addCupButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        addSunglassButton.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
+        addSunglassButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100).isActive = true
+        addSunglassButton.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        addSunglassButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
         
         addCubeButton.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
         addCubeButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100).isActive = true

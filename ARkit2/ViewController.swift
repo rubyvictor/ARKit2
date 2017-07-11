@@ -36,12 +36,16 @@ class ViewController: UIViewController {
         return button
     }()
     
-    
+    func randomFloat(min: Float, max: Float) -> Float {
+        return (Float(arc4random()) / 0xFFFFFFFF) * (max - min) + min // 0xFFFFFFFF same as UInt32.max
+    }
     
     
     @objc func handleAddCup() {
+        let zCoords = randomFloat(min: -2, max: -0.2)
+        
         let cubeNode = SCNNode(geometry: SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0))
-        cubeNode.position = SCNVector3(0,0,-0.2) // This is in metres
+        cubeNode.position = SCNVector3(0,0,zCoords) // This is in metres
         sceneView.scene.rootNode.addChildNode(cubeNode)
         
         

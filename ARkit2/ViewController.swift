@@ -77,7 +77,7 @@ class ViewController: UIViewController {
         guard let zPos = cc.z else { return }
         sunglassNode.position = SCNVector3(xPos, yPos, zPos)
         
-        guard let virtualObjectScene = SCNScene(named: "sunglass.dae", inDirectory: "ar.scnassets/sunglass", options: nil) else { return }
+        guard let virtualObjectScene = SCNScene(named: "sunglass.dae", inDirectory: "art.scnassets", options: nil) else { return }
         
         let wrapperNode = SCNNode()
         for child in virtualObjectScene.rootNode.childNodes {

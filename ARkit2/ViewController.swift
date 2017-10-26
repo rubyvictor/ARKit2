@@ -10,7 +10,7 @@ import UIKit
 import SceneKit
 import ARKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, ARSCNViewDelegate {
 
     let sceneView: ARSCNView = {
         let sv = ARSCNView()
@@ -18,12 +18,12 @@ class ViewController: UIViewController {
         return sv
     }()
     
-    let addSunglassButton: UIButton = {
+    let addShipButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .yellow
-        button.setTitle("Add sunglass", for: .normal)
+        button.setTitle("Add ship", for: .normal)
         button.setTitleColor(.blue, for: .normal)
-        button.addTarget(self, action: #selector(handleAddSunglass), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleAddShip), for: .touchUpInside)
         return button
     }()
     
@@ -68,42 +68,50 @@ class ViewController: UIViewController {
         
     }
     
-    @objc func handleAddSunglass() {
-        let sunglassNode = SCNNode()
+    @objc func handleAddShip() {
+        let shipNode = SCNNode()
         
         let cc = getCameraCoordinates(sceneView: sceneView)
         guard let xPos = cc.x else { return }
         guard let yPos = cc.y else { return }
         guard let zPos = cc.z else { return }
-        sunglassNode.position = SCNVector3(xPos, yPos, zPos)
+        shipNode.position = SCNVector3(xPos, yPos, zPos)
         
-        guard let virtualObjectScene = SCNScene(named: "sunglass.dae", inDirectory: "art.scnassets", options: nil) else { return }
+        guard let virtualObjectScene = SCNScene(named: "ship.scn", inDirectory: "art.scnassets", options: nil) else { return }
         
         let wrapperNode = SCNNode()
         for child in virtualObjectScene.rootNode.childNodes {
             child.geometry?.firstMaterial?.lightingModel = .physicallyBased
             wrapperNode.addChildNode(child)
         }
-        sunglassNode.addChildNode(wrapperNode)
         
-        sceneView.scene.rootNode.addChildNode(sunglassNode)
+        shipNode.addChildNode(wrapperNode)
         
-        print("Added sunglass")
+        sceneView.scene.rootNode.addChildNode(shipNode)
+        
+        print("Added ship with button")
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        sceneView.delegate = self
         
         setupViews()
         
+        sceneView.debugOptions = ARSCNDebugOptions.showWorldOrigin
+        sceneView.showsStatistics = true
+        sceneView.debugOptions = ARSCNDebugOptions.showFeaturePoints
+        
+        addTapGestureToSceneView()
     }
     
     func setupViews() {
         view.addSubview(sceneView)
-        view.addSubview(addSunglassButton)
+        view.addSubview(addShipButton)
         view.addSubview(addCubeButton)
         sceneView.translatesAutoresizingMaskIntoConstraints = false
-        addSunglassButton.translatesAutoresizingMaskIntoConstraints = false
+        addShipButton.translatesAutoresizingMaskIntoConstraints = false
         addCubeButton.translatesAutoresizingMaskIntoConstraints = false
         
         sceneView.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
@@ -111,10 +119,10 @@ class ViewController: UIViewController {
         sceneView.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
         sceneView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100).isActive = true
         
-        addSunglassButton.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
-        addSunglassButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100).isActive = true
-        addSunglassButton.widthAnchor.constraint(equalToConstant: 100).isActive = true
-        addSunglassButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        addShipButton.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
+        addShipButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100).isActive = true
+        addShipButton.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        addShipButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
         
         addCubeButton.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
         addCubeButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -100).isActive = true
@@ -127,15 +135,66 @@ class ViewController: UIViewController {
         super.viewWillAppear(animated)
         
         // Create a session configuration
-        let configuration = ARWorldTrackingSessionConfiguration()
+        let configuration = ARWorldTrackingConfiguration()
         
         // Run the view's session
         sceneView.session.run(configuration)
     }
     
+    // Add GestureRecognition to sceneView
+    func addTapGestureToSceneView(){
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.handleDidTap(withGestureRecognizer: )))
+        sceneView.addGestureRecognizer(tapGestureRecognizer)
+    }
+    
+    // Gesture Recognizer to remove object tapped.  But conflicts with touchesBegan method
+    @objc func handleDidTap(withGestureRecognizer recognizer: UIGestureRecognizer){
+        let tapLocation = recognizer.location(in: sceneView)
+        let hitTestResult = sceneView.hitTest(tapLocation)
+        guard let node = hitTestResult.first?.node else { return }
+        node.removeFromParentNode()
+        print("Deleted ship or cube with gesture")
+    }
+    
+    //Override touch method to add Ship wherever you tap on the screen OR if tap a ship to remove sceneview
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        
+        let hitResult = sceneView.hitTest(touch.location(in: sceneView), types: ARHitTestResult.ResultType.featurePoint)
+            
+        guard let pointResult = hitResult.last else { return }
+        let pointTransform = SCNMatrix4(pointResult.worldTransform)
+        let pointVector = SCNVector3Make(pointTransform.m41, pointTransform.m42, pointTransform.m43)
+        addShip(position: pointVector)
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+    }
+    
+    //Method to add ship by tapping anywhere on the scene
+    func addShip(position: SCNVector3) {
+        let shipNode = SCNNode()
+        
+        guard let virtualObjectScene = SCNScene(named: "ship.scn", inDirectory: "art.scnassets", options: nil) else { return }
+        
+        let wrapperNode = SCNNode()
+        for child in virtualObjectScene.rootNode.childNodes {
+            child.geometry?.firstMaterial?.lightingModel = .physicallyBased
+            wrapperNode.addChildNode(child)
+        }
+        
+        shipNode.addChildNode(wrapperNode)
+        shipNode.position = position
+        
+        sceneView.scene.rootNode.addChildNode(shipNode)
+        
+        print("Added ship with tap")
+        
+    }
     
     
-    
-
     
 }
+

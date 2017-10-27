@@ -100,7 +100,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         setupViews()
         
         sceneView.debugOptions = ARSCNDebugOptions.showWorldOrigin
-        sceneView.showsStatistics = true
+//        sceneView.showsStatistics = true
         sceneView.debugOptions = ARSCNDebugOptions.showFeaturePoints
         
         addTapGestureToSceneView()
